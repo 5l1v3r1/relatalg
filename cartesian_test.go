@@ -57,6 +57,6 @@ func TestCartesian(t *testing.T) {
 	}
 
 	if !Equal(expected, actual) {
-		t.Errorf("invalid joined relation")
+		t.Error("invalid joined relation")
 	}
 }

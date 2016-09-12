@@ -6,7 +6,7 @@ package relatalg
 func Cartesian(x, y Relation) Relation {
 	for column := range x.Schema() {
 		if _, ok := y.Schema()[column]; ok {
-			panic("schema overlap: " + column.String())
+			panic("schema overlap in column: " + column.String())
 		}
 	}
 	jointSchema := map[Column]Type{}
