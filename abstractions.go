@@ -1,6 +1,6 @@
-// Package dbalg implements various abstractions for
+// Package relatalg implements various abstractions for
 // relational algebra.
-package dbalg
+package relatalg
 
 import "strings"
 
@@ -68,7 +68,7 @@ type Relation interface {
 // A ConcreteRelation stores a pre-determined schema and
 // channel of entries and returns said values.
 type ConcreteRelation struct {
-	S map[ColumnType]Type
+	S map[Column]Type
 	E <-chan Row
 }
 
