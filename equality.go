@@ -11,25 +11,17 @@ func Equal(r1, r2 Relation) bool {
 	if !schemaContains(r1, r2) || !schemaContains(r2, r1) {
 		return false
 	}
-	var unmatchedValues []Row
+	var unmatchedValues multiset
 	for row := range r1.Entries() {
-		unmatchedValues = append(unmatchedValues, row)
+		unmatchedValues.Add(row)
 	}
 	for row := range r2.Entries() {
-		var found bool
-		for i, row1 := range unmatchedValues {
-			if rowsEqual(row, row1) {
-				found = true
-				unmatchedValues[i] = unmatchedValues[len(unmatchedValues)-1]
-				unmatchedValues = unmatchedValues[:len(unmatchedValues)-1]
-				break
-			}
-		}
-		if !found {
+		if !unmatchedValues.Contains(row) {
 			return false
 		}
+		unmatchedValues.Remove(row)
 	}
-	return len(unmatchedValues) == 0
+	return unmatchedValues.Len() == 0
 }
 
 func schemaContains(subSchema, superSchema Relation) bool {
