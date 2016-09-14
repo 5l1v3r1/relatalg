@@ -1,5 +1,33 @@
 package relatalg
 
+// Project reduces a relation to a subset of columns.
+func Project(r Relation, cols []Column) Relation {
+	for _, c := range cols {
+		if _, ok := r.Schema()[c]; !ok {
+			panic("column not in schema: " + c.String())
+		}
+	}
+	resChan := make(chan Row, 1)
+	go func() {
+		defer close(resChan)
+		for x := range r.Entries() {
+			newRow := Row{}
+			for _, c := range cols {
+				newRow[c] = x[c]
+			}
+			resChan <- newRow
+		}
+	}()
+	newSchema := map[Column]Type{}
+	for _, c := range cols {
+		newSchema[c] = r.Schema()[c]
+	}
+	return &ConcreteRelation{
+		E: resChan,
+		S: newSchema,
+	}
+}
+
 // Rename renames a column in a relation.
 // The replaced column name must be part of the relation's
 // schema, and the new column name must not already be a
