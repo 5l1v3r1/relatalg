@@ -50,6 +50,54 @@ func Subtract(a, b Relation) Relation {
 	}
 }
 
+// Union produces a Relation with all the elements from
+// a and b.
+func Union(a, b Relation) Relation {
+	if !schemaContains(a, b) || !schemaContains(b, a) {
+		panic("schemas must match")
+	}
+	resChan := make(chan Row, 1)
+	go func() {
+		defer close(resChan)
+		for r := range a.Entries() {
+			resChan <- r
+		}
+		for r := range b.Entries() {
+			resChan <- r
+		}
+	}()
+	return &ConcreteRelation{
+		E: resChan,
+		S: a.Schema(),
+	}
+}
+
+// Intersection produces a Relation with the elements that
+// are in both a and b.
+func Intersection(a, b Relation) Relation {
+	if !schemaContains(a, b) || !schemaContains(b, a) {
+		panic("schemas must match")
+	}
+	resChan := make(chan Row, 1)
+	go func() {
+		defer close(resChan)
+		var available multiset
+		for r := range a.Entries() {
+			available.Add(r)
+		}
+		for r := range b.Entries() {
+			if available.Contains(r) {
+				available.Remove(r)
+				resChan <- r
+			}
+		}
+	}()
+	return &ConcreteRelation{
+		E: resChan,
+		S: a.Schema(),
+	}
+}
+
 type multiset struct {
 	entries []Row
 }

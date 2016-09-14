@@ -78,3 +78,86 @@ func TestSubtract(t *testing.T) {
 		t.Error("invalid result")
 	}
 }
+
+func TestUnion(t *testing.T) {
+	r1Chan := make(chan Row, 4)
+	r2Chan := make(chan Row, 3)
+	r3Chan := make(chan Row, 7)
+
+	r1Chan <- Row{ParseColumn("id"): 0}
+	r1Chan <- Row{ParseColumn("id"): 1}
+	r1Chan <- Row{ParseColumn("id"): 2}
+	r1Chan <- Row{ParseColumn("id"): 1}
+
+	r2Chan <- Row{ParseColumn("id"): 3}
+	r2Chan <- Row{ParseColumn("id"): 1}
+	r2Chan <- Row{ParseColumn("id"): 2}
+
+	r3Chan <- Row{ParseColumn("id"): 0}
+	r3Chan <- Row{ParseColumn("id"): 1}
+	r3Chan <- Row{ParseColumn("id"): 1}
+	r3Chan <- Row{ParseColumn("id"): 1}
+	r3Chan <- Row{ParseColumn("id"): 2}
+	r3Chan <- Row{ParseColumn("id"): 2}
+	r3Chan <- Row{ParseColumn("id"): 3}
+
+	close(r1Chan)
+	close(r2Chan)
+	close(r3Chan)
+
+	r1 := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r1Chan,
+	}
+	r2 := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r2Chan,
+	}
+	actual := Union(r1, r2)
+	expected := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r3Chan,
+	}
+	if !Equal(actual, expected) {
+		t.Error("invalid result")
+	}
+}
+
+func TestIntersection(t *testing.T) {
+	r1Chan := make(chan Row, 4)
+	r2Chan := make(chan Row, 3)
+	r3Chan := make(chan Row, 2)
+
+	r1Chan <- Row{ParseColumn("id"): 0}
+	r1Chan <- Row{ParseColumn("id"): 1}
+	r1Chan <- Row{ParseColumn("id"): 2}
+	r1Chan <- Row{ParseColumn("id"): 1}
+
+	r2Chan <- Row{ParseColumn("id"): 3}
+	r2Chan <- Row{ParseColumn("id"): 1}
+	r2Chan <- Row{ParseColumn("id"): 2}
+
+	r3Chan <- Row{ParseColumn("id"): 1}
+	r3Chan <- Row{ParseColumn("id"): 2}
+
+	close(r1Chan)
+	close(r2Chan)
+	close(r3Chan)
+
+	r1 := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r1Chan,
+	}
+	r2 := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r2Chan,
+	}
+	actual := Intersection(r1, r2)
+	expected := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r3Chan,
+	}
+	if !Equal(actual, expected) {
+		t.Error("invalid result")
+	}
+}
