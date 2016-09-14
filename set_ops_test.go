@@ -35,3 +35,46 @@ func TestDistinct(t *testing.T) {
 		t.Error("distinct returned invalid result")
 	}
 }
+
+func TestSubtract(t *testing.T) {
+	r1Chan := make(chan Row, 6)
+	r2Chan := make(chan Row, 5)
+	r3Chan := make(chan Row, 2)
+
+	r1Chan <- Row{ParseColumn("id"): 0}
+	r1Chan <- Row{ParseColumn("id"): 1}
+	r1Chan <- Row{ParseColumn("id"): 2}
+	r1Chan <- Row{ParseColumn("id"): 1}
+	r1Chan <- Row{ParseColumn("id"): 2}
+	r1Chan <- Row{ParseColumn("id"): 3}
+
+	r2Chan <- Row{ParseColumn("id"): 0}
+	r2Chan <- Row{ParseColumn("id"): 1}
+	r2Chan <- Row{ParseColumn("id"): 2}
+	r2Chan <- Row{ParseColumn("id"): 2}
+	r2Chan <- Row{ParseColumn("id"): 2}
+
+	r3Chan <- Row{ParseColumn("id"): 1}
+	r3Chan <- Row{ParseColumn("id"): 3}
+
+	close(r1Chan)
+	close(r2Chan)
+	close(r3Chan)
+
+	r1 := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r1Chan,
+	}
+	r2 := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r2Chan,
+	}
+	actual := Subtract(r1, r2)
+	expected := &ConcreteRelation{
+		S: map[Column]Type{ParseColumn("id"): Integer},
+		E: r3Chan,
+	}
+	if !Equal(actual, expected) {
+		t.Error("invalid result")
+	}
+}

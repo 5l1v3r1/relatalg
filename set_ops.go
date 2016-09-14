@@ -19,6 +19,37 @@ func Distinct(r Relation) Relation {
 	}
 }
 
+// Subtract removes the elements of b from a.
+// It follows the subtraction rules for multisets.
+// For example, if b contains an element once and a
+// contains it twice, the result will contain it once.
+//
+// The schemas of a and b must match.
+func Subtract(a, b Relation) Relation {
+	if !schemaContains(a, b) || !schemaContains(b, a) {
+		panic("schemas must match")
+	}
+	var bSet multiset
+	for r := range b.Entries() {
+		bSet.Add(r)
+	}
+	resChan := make(chan Row, 1)
+	go func() {
+		defer close(resChan)
+		for r := range a.Entries() {
+			if bSet.Contains(r) {
+				bSet.Remove(r)
+			} else {
+				resChan <- r
+			}
+		}
+	}()
+	return &ConcreteRelation{
+		E: resChan,
+		S: a.Schema(),
+	}
+}
+
 type multiset struct {
 	entries []Row
 }
